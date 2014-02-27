@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+  xmlns:jpa="http://www.springframework.org/schema/data/jpa" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans
+                      http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                      http://www.springframework.org/schema/mvc
+                      http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+                      http://www.springframework.org/schema/context
+                      http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                      http://www.springframework.org/schema/data/jpa
+                      http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd
+                      http://www.springframework.org/schema/tx
+                      http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+
+  <bean class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+  <bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+  <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+    <property name="driverClassName" value="org.h2.Driver" />
+    <property name="url" value="jdbc:h2:mem:alm;MODE=Oracle;DB_CLOSE_DELAY=-1" />
+    <property name="username" value="sa" />
+    <property name="password" value="" />
+    <property name="initSQL" value="SELECT 1" />
+    <property name="maxAge" value="28800000" />
+    <property name="maxActive" value="10" />
+    <property name="jmxEnabled" value="true" />
+    <property name="testWhileIdle" value="true" />
+    <property name="testOnBorrow" value="true" />
+    <property name="validationQuery" value="SELECT 1" />
+    <property name="removeAbandoned" value="true" />
+    <property name="removeAbandonedTimeout" value="3600" />
+    <property name="logAbandoned" value="true" />
+    <property name="name" value="gtp-ltw-mwe-jdbc-pool" />
+  </bean>
+  
+  <bean id="jpaDialect" class="org.springframework.orm.jpa.vendor.EclipseLinkJpaDialect" />
+  <bean id="persistenceProvider" class="org.eclipse.persistence.jpa.PersistenceProvider" />
+
+  <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <property name="jpaVendorAdapter">
+      <bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
+        <property name="database" value="ORACLE" />
+      </bean>
+    </property>
+    <property name="jpaDialect" ref="jpaDialect" />
+    <property name="persistenceProvider" ref="persistenceProvider" />
+    <property name="mappingResources" value="org/example/jpa-type-converters.xml" />
+    <property name="persistenceUnitName" value="gtp-ltw-mwe" />
+    <property name="packagesToScan" value="org.example.entity" />
+    <property name="dataSource" ref="dataSource" />
+    <property name="jpaPropertyMap">
+      <props>
+        <prop key="eclipselink.logging.level">INFO</prop>
+        <prop key="eclipselink.deploy-on-startup">true</prop>
+        <prop key="eclipselink.ddl-generation">create-or-extend-tables</prop>
+        <prop key="eclipselink.ddl-generation.output-mode">database</prop>
+        <!--
+        <prop key="eclipselink.application-location">/tmp/gtp-ltw-mwe</prop>
+        <prop key="eclipselink.logging.file">/tmp/gtp-ltw-mwe/orm.log</prop>
+        -->
+      </props>
+    </property>
+  </bean>
+  
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+    <property name="entityManagerFactory" ref="entityManagerFactory" />
+  </bean>
+  
+  <tx:annotation-driven transaction-manager="transactionManager" mode="aspectj" />
+  
+  <jpa:repositories base-package="org.example.entity" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="transactionManager" />
+
+</beans>
